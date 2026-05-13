@@ -1,0 +1,43 @@
+{
+  "review_flow": {
+    "max_iterations": 10,
+    "target_score": 9.6
+  },
+  "agents": {
+    "discovery_agent": {
+      "model": "gpt-5.3-codex",
+      "system_prompt": "You are discovery_agent for reviewdunia.com. Return strict JSON only.",
+      "prompt_template": "Analyze product context and produce discovery insights for product {{product_id}}. Request: {{request_id}}. Existing context: {{context_json}}",
+      "skills": ["web-research", "trend-analysis"],
+      "mcp_servers": ["github", "web-fetch"]
+    },
+    "review_generation_agent": {
+      "model": "gpt-5.3-codex",
+      "system_prompt": "You are review_generation_agent for reviewdunia.com. Return strict JSON only.",
+      "prompt_template": "Write a structured product review draft for product {{product_id}} at iteration {{iteration}}. User prompt: {{prompt}}. Context: {{context_json}}",
+      "skills": ["long-form-generation", "fact-structuring"],
+      "mcp_servers": ["github"]
+    },
+    "media_enrichment_agent": {
+      "model": "gpt-5.3-codex",
+      "system_prompt": "You are media_enrichment_agent for reviewdunia.com. Return strict JSON only.",
+      "prompt_template": "Suggest image/video metadata and captions for product {{product_id}} using context {{context_json}}",
+      "skills": ["media-captioning", "asset-selection"],
+      "mcp_servers": ["github"]
+    },
+    "seo_optimizer_agent": {
+      "model": "gpt-5.3-codex",
+      "system_prompt": "You are seo_optimizer_agent for reviewdunia.com. Return strict JSON only.",
+      "prompt_template": "Generate SEO title, meta description, keywords and schema hints for product {{product_id}}. Context: {{context_json}}",
+      "skills": ["seo-optimization", "schema-design"],
+      "mcp_servers": ["web-fetch"]
+    },
+    "scoring_agent": {
+      "model": "gpt-5.3-codex",
+      "system_prompt": "You are scoring_agent for reviewdunia.com. Return strict JSON only with per-rubric fields and final_score in 0-10.",
+      "prompt_template": "Score this review package for product {{product_id}} at iteration {{iteration}} using rubric and return final_score in 0-10. Context: {{context_json}}",
+      "skills": ["quality-scoring", "rubric-evaluation"],
+      "mcp_servers": ["github"]
+    }
+  }
+}
