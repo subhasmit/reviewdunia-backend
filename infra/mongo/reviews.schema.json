@@ -1,0 +1,58 @@
+{
+  "collection": "reviews",
+  "example_document": {
+    "_id": { "$oid": "REVIEW_OBJECT_ID" },
+    "product_id": "UUID-STRING",
+    "version": 1,
+    "title": "In-depth review: Product Name",
+    "content": "<h2>Summary</h2><p>...</p>",
+    "content_markdown": "## Summary\n\n...",
+    "images": [
+      {
+        "path": "/media/images/abcd.jpg",
+        "caption": "Front view",
+        "width": 1200,
+        "height": 800,
+        "source": "user_upload|agent_generated|affiliate"
+      }
+    ],
+    "videos": [
+      {
+        "url": "https://.../video.mp4",
+        "caption": "Short review clip",
+        "duration_seconds": 30
+      }
+    ],
+    "score": 8.4,
+    "seo": {
+      "title": "Product Name Review - Pros, Cons, Verdict",
+      "meta_description": "Comprehensive review of Product Name with specs, pros/cons, and affiliate links.",
+      "keywords": ["product name", "best product name 2026"],
+      "canonical": "https://reviewdunia.com/category/product-slug"
+    },
+    "iteration_history": [
+      {
+        "iteration": 1,
+        "agent_notes": "Initial draft created from discovery feed",
+        "score": 7.2,
+        "timestamp": { "$date": "2026-05-13T03:00:00Z" }
+      }
+    ],
+    "status": "pending_approval",
+    "created_by_agent": true,
+    "needs_human_review": false,
+    "created_at": { "$date": "2026-05-13T03:00:00Z" },
+    "updated_at": { "$date": "2026-05-13T03:00:00Z" }
+  },
+  "recommended_indexes": [
+    { "key": { "product_id": 1 }, "name": "idx_product_id" },
+    { "key": { "status": 1, "score": -1 }, "name": "idx_status_score" },
+    { "key": { "created_at": -1 }, "name": "idx_created_at" },
+    { "key": { "iteration_history.iteration": 1 }, "name": "idx_iteration" },
+    {
+      "key": { "seo.keywords": "text", "title": "text", "content_markdown": "text" },
+      "name": "idx_text_search",
+      "weights": { "title": 5, "seo.keywords": 3, "content_markdown": 1 }
+    }
+  ]
+}

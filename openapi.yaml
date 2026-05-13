@@ -1,0 +1,338 @@
+openapi: 3.0.3
+info:
+  title: ReviewDunia API
+  version: "0.1.0"
+  description: API for reviewdunia.com - product catalog, uploads, review generation, admin approval.
+servers:
+  - url: https://api.reviewdunia.local
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        role:
+          type: string
+    ProductSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        brand:
+          type: string
+        category_id:
+          type: string
+        primary_image_path:
+          type: string
+        affiliate_links:
+          type: object
+    ProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/ProductSummary'
+        - type: object
+          properties:
+            description:
+              type: string
+            status:
+              type: string
+            latest_review:
+              type: object
+    UploadResponse:
+      type: object
+      properties:
+        request_id:
+          type: string
+        matches:
+          type: array
+          items:
+            type: object
+            properties:
+              product_id:
+                type: string
+              title:
+                type: string
+              thumbnail:
+                type: string
+              score:
+                type: number
+        queued:
+          type: boolean
+    ReviewRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+        source:
+          type: string
+        requested_by:
+          type: string
+    ReviewSummary:
+      type: object
+      properties:
+        review_id:
+          type: string
+        product_id:
+          type: string
+        score:
+          type: number
+        status:
+          type: string
+paths:
+  /api/v1/upload/screenshot:
+    post:
+      summary: Upload screenshot and attempt image match
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/products:
+    get:
+      summary: Search products by text
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductSummary'
+  /api/v1/products/{product_id}:
+    get:
+      summary: Get product detail
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+        '404':
+          description: Not found
+  /api/v1/reviews/{product_id}/request:
+    post:
+      summary: Request review generation for a product
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+      responses:
+        '202':
+          description: Review generation queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewSummary'
+  /api/v1/search:
+    get:
+      summary: Unified search (text or image-match id)
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: image_match_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductSummary'
+  /api/v1/admin/reviews/pending:
+    get:
+      summary: List pending reviews (admin)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Pending reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewSummary'
+  /api/v1/admin/reviews/{review_id}/approve:
+    post:
+      summary: Approve and publish review
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: review_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Approved
+  /api/v1/admin/reviews/{review_id}/request_edit:
+    post:
+      summary: Request edits for a review
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: review_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  type: string
+      responses:
+        '200':
+          description: Edit requested
+  /api/v1/admin/telemetry/site:
+    get:
+      summary: Site telemetry and metrics (admin)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Telemetry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  site_metrics:
+                    type: object
+                  agent_metrics:
+                    type: object
+  /api/v1/telemetry/site:
+    get:
+      summary: Site telemetry and metrics (admin)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Telemetry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  site_metrics:
+                    type: object
+                  agent_metrics:
+                    type: object
+  /api/v1/auth/login:
+    post:
+      summary: Login (returns JWT)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+  /api/v1/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string

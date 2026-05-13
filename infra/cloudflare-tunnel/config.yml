@@ -1,0 +1,7 @@
+tunnel: reviewdunia-backend
+credentials-file: /etc/cloudflared/creds.json
+
+ingress:
+  - hostname: api.reviewdunia.local
+    service: http://api:8000
+  - service: http_status:404

@@ -1,0 +1,66 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    working_dir: /app/services/api
+    volumes:
+      - .:/app
+      - uploads:/data/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - mongo
+    environment:
+      POSTGRES_DSN: postgresql+psycopg2://reviewdunia:reviewdunia@postgres:5432/reviewdunia
+      MONGODB_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379/0
+      UPLOAD_VOLUME_PATH: /data/uploads
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    command: python -m services.agents.workers.worker
+    working_dir: /app
+    volumes:
+      - .:/app
+      - uploads:/data/uploads
+    depends_on:
+      - redis
+      - postgres
+      - mongo
+    environment:
+      PYTHONPATH: /app/services/api
+      REDIS_URL: redis://redis:6379/0
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: reviewdunia
+      POSTGRES_USER: reviewdunia
+      POSTGRES_PASSWORD: reviewdunia
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  uploads:
+  pgdata:
+  mongodata:
